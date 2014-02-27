@@ -14,6 +14,12 @@ public class LogMessage implements Parcelable {
 		this.msg = msg;
 	}
 
+	public LogMessage(Parcel in) {
+		this.priority = in.readInt();
+		this.tag = in.readString();
+		this.msg = in.readString();
+	}
+	
 	public int getPriority() {
 		return priority;
 	}
@@ -40,10 +46,7 @@ public class LogMessage implements Parcelable {
 
 	public static final Parcelable.Creator<LogMessage> CREATOR = new Parcelable.Creator<LogMessage>() {
 		public LogMessage createFromParcel(Parcel in) {
-			int priority = in.readInt();
-			String tag = in.readString();
-			String msg = in.readString();
-			return new LogMessage(priority, tag, msg);
+			return new LogMessage(in);
 		}
 
 		public LogMessage[] newArray(int size) {
