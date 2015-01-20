@@ -4,7 +4,8 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk android:minSdkVersion="15" />
+    <uses-sdk android:minSdkVersion="15"
+        android:targetSdkVersion="21" />
 
     <permission-group
         android:name="com.marakana.android.logservice.LOG_PERMISSIONS"
@@ -27,10 +28,6 @@
         <service
             android:name=".LogService"
             android:permission="com.marakana.android.logservice.USE_LOG_SERVICE" >
-            <intent-filter>
-                <action android:name="com.marakana.android.logcommon.ILogService" />
-            </intent-filter>
-        </service>
     </application>
 
 </manifest>
