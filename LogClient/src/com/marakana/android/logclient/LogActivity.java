@@ -2,9 +2,11 @@ package com.marakana.android.logclient;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -12,6 +14,10 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.marakana.android.logcommon.ILogService;
+import com.marakana.android.logcommon.LogMessage;
 
 public class LogActivity extends Activity implements OnClickListener,
 		ServiceConnection {
@@ -27,7 +33,7 @@ public class LogActivity extends Activity implements OnClickListener,
 
 	private Button button;
 
-	/* BINDER LAB: We'll need a reference to our Binder service */
+	private ILogService service;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -44,32 +50,34 @@ public class LogActivity extends Activity implements OnClickListener,
 	@Override
 	protected void onStart() {
 		super.onStart();
-		/* BINDER LAB:
-		 * We need to bind to our app service when coming
-		 * into the foreground.
-		 */
+		Log.d(TAG, "Binding...");
+		Intent serviceIntent = new Intent();
+		serviceIntent.setComponent(new ComponentName("com.marakana.android.logservice",
+				"com.marakana.android.logservice.LogService"));
+		
+		if (!super.bindService(serviceIntent, this, BIND_AUTO_CREATE)) {
+			Log.w(TAG, "Failed to bind to service");
+		}
 	}
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		/* BINDER LAB:
-		 * We need to unbind from our app service when going
-		 * into the background.
-		 */
+		Log.d(TAG, "Unbinding...");
+		super.unbindService(this);
 	}
 
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder service) {
-		/* BINDER LAB: Attach to your Binder service here */
-		
+		Log.d(TAG, "Connected to " + name);
+		this.service = ILogService.Stub.asInterface(service);
 		this.button.setEnabled(true);
 	}
 
 	@Override
 	public void onServiceDisconnected(ComponentName name) {
-		/* BINDER LAB: Clear your Binder service reference here */
-		
+		Log.d(TAG, "Disconnected from " + name);
+		this.service = null;
 		this.button.setEnabled(false);
 	}
 
@@ -79,12 +87,17 @@ public class LogActivity extends Activity implements OnClickListener,
 			int priority = LOG_LEVEL[priorityPosition];
 			String tag = this.tag.getText().toString();
 			String msg = this.msg.getText().toString();
-			
-			/* 
-			 * BINDER LAB:
-			 * Call your new log service here, passing in the parameters
-			 * we've obtained above
-			 */
+			try {
+				this.service.log(new LogMessage(priority, tag, msg));
+				this.tag.getText().clear();
+				this.msg.getText().clear();
+				Toast.makeText(this, R.string.log_success, Toast.LENGTH_SHORT)
+						.show();
+			} catch (RemoteException e) {
+				Log.d(TAG, "Failed to log", e);
+				Toast.makeText(this, R.string.log_failure, Toast.LENGTH_SHORT)
+						.show();
+			}
 		}
 	}
 }
